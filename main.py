@@ -22,13 +22,13 @@ class Compra:
         self.lista_productos = []
         self.costo_total = 0.0
 
-    def agregar_auto(self, auto):
-        self.lista_productos.append(auto)
+    def agregar_auto(self, auto, agregar_seguro):
+        self.lista_productos.append((auto, agregar_seguro))
         self.costo_total += auto.precio_unitario
-
-    def generar_factura(self, agregar_seguro):
         if agregar_seguro:
-            self.costo_total += sum(auto.precio_unitario * 0.15 for auto in self.lista_productos)
+            self.costo_total += auto.precio_unitario * 0.15
+
+    def generar_factura(self):
         return self.costo_total
 
 autos = []
@@ -77,13 +77,13 @@ def realizar_compra():
             placa = input("Ingrese la placa del auto: ")
             auto = next((a for a in autos if a.placa == placa), None)
             if auto:
-                compra.agregar_auto(auto)
+                agregar_seguro = input("¿Desea agregar seguro al auto? (SI/NO): ").strip().upper() == "SI"
+                compra.agregar_auto(auto, agregar_seguro)
                 print("Auto agregado a la compra.")
             else:
                 print("Auto no encontrado.")
         elif opcion == "2":
-            agregar_seguro = input("¿Desea agregar seguro al auto? (SI/NO): ").strip().upper() == "SI"
-            total = compra.generar_factura(agregar_seguro)
+            total = compra.generar_factura()
             compras.append(compra)
             print(f"Compra finalizada. Total: Q{total:.2f}")
             break
@@ -95,8 +95,9 @@ def reporte_compras():
         print("==============================================")
         print(f"CLIENTE:\nNombre: {compra.cliente.nombre}\nCorreo electrónico: {compra.cliente.correo}\nNit: {compra.cliente.nit}")
         print("AUTO(S) ADQUIRIDO(S)")
-        for auto in compra.lista_productos:
-            print(f"{auto.placa}, {auto.marca}, {auto.modelo}, Q{auto.precio_unitario:.2f}, {auto.descripcion}")
+        for auto, agregar_seguro in compra.lista_productos:
+            seguro_texto = "Sí" if agregar_seguro else "No"
+            print(f"{auto.placa}, {auto.marca}, {auto.modelo}, Q{auto.precio_unitario:.2f}, {auto.descripcion}, Seguro: {seguro_texto}")
         print(f"TOTAL: Q{compra.costo_total:.2f}")
         total_general += compra.costo_total
     print("==============================================")
