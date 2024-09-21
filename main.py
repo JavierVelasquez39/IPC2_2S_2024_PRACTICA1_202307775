@@ -1,140 +1,152 @@
-class Auto:
-    def __init__(self, placa, marca, modelo, descripcion, precio_unitario):
-        self.placa = placa
-        self.marca = marca
-        self.modelo = modelo
-        self.descripcion = descripcion
-        self.precio_unitario = precio_unitario
+from flask import Flask, render_template, request, redirect, url_for, flash, send_from_directory
+from flask_sqlalchemy import SQLAlchemy
+from werkzeug.security import check_password_hash, generate_password_hash
+from flask_login import LoginManager, UserMixin, login_user, login_required, logout_user, current_user
+import os
+from werkzeug.utils import secure_filename
+import requests
+from io import BytesIO
 
-class Cliente:
-    def __init__(self, nombre, correo, nit):
-        self.nombre = nombre
-        self.correo = correo
-        self.nit = nit
+app = Flask(__name__)
+app.config['SECRET_KEY'] = 'clave_secreta_super_autos_gt'
+app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///super_autos_gt.db'
+app.config['UPLOAD_FOLDER'] = 'static/uploads'
+app.config['ALLOWED_EXTENSIONS'] = {'png', 'jpg', 'jpeg', 'gif', 'webp'}
+db = SQLAlchemy(app)
+login_manager = LoginManager(app)
+login_manager.login_view = 'login'
 
-class Compra:
-    id_counter = 1
+if not os.path.exists(app.config['UPLOAD_FOLDER']):
+    os.makedirs(app.config['UPLOAD_FOLDER'])
 
-    def __init__(self, cliente):
-        self.id = Compra.id_counter
-        Compra.id_counter += 1
-        self.cliente = cliente
-        self.lista_productos = []
-        self.costo_total = 0.0
+class Usuario(UserMixin, db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    username = db.Column(db.String(80), unique=True, nullable=False)
+    password = db.Column(db.String(120), nullable=False)
 
-    def agregar_auto(self, auto, agregar_seguro):
-        self.lista_productos.append((auto, agregar_seguro))
-        self.costo_total += auto.precio_unitario
-        if agregar_seguro:
-            self.costo_total += auto.precio_unitario * 0.15
+class Auto(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    idTipoAuto = db.Column(db.Integer, unique=True, nullable=False)
+    marca = db.Column(db.String(80), nullable=False)
+    modelo = db.Column(db.String(80), nullable=False)
+    descripcion = db.Column(db.Text, nullable=False)
+    precioUnitario = db.Column(db.Float, nullable=False)
+    cantidad = db.Column(db.Integer, nullable=False)
+    imagen = db.Column(db.String(200), nullable=False)
+    placa = db.Column(db.String(20), nullable=False)  # Campo placa añadido
 
-    def generar_factura(self):
-        return self.costo_total
+def allowed_file(filename):
+    return '.' in filename and filename.rsplit('.', 1)[1].lower() in app.config['ALLOWED_EXTENSIONS']
 
-autos = []
-clientes = []
-compras = []
+def is_url(string):
+    return string.startswith(('http://', 'https://'))
 
-def registrar_auto():
-    placa = input("Ingrese la placa del auto: ")
-    if any(auto.placa == placa for auto in autos):
-        print("La placa ya está registrada. Intente con una placa diferente.")
-        return
-    marca = input("Ingrese la marca del auto: ")
-    modelo = input("Ingrese el modelo del auto: ")
-    descripcion = input("Ingrese la descripción del auto: ")
-    precio_unitario = float(input("Ingrese el precio unitario del auto: "))
-    auto = Auto(placa, marca, modelo, descripcion, precio_unitario)
-    autos.append(auto)
-    print("Auto registrado exitosamente.")
+@login_manager.user_loader
+def load_user(user_id):
+    return Usuario.query.get(int(user_id))
 
-def registrar_cliente():
-    nombre = input("Ingrese el nombre del cliente: ")
-    correo = input("Ingrese el correo electrónico del cliente: ")
-    nit = input("Ingrese el NIT del cliente: ")
-    if any(cliente.nit == nit for cliente in clientes):
-        print("El NIT ya está registrado. Intente con un NIT diferente.")
-        return
-    cliente = Cliente(nombre, correo, nit)
-    clientes.append(cliente)
-    print("Cliente registrado exitosamente.")
+@app.route('/')
+def index():
+    return redirect(url_for('login'))
 
-def realizar_compra():
-    nit = input("Ingrese el NIT del cliente: ")
-    cliente = next((c for c in clientes if c.nit == nit), None)
-    if not cliente:
-        print("Cliente no encontrado.")
-        return
-
-    compra = Compra(cliente)
-    while True:
-        print("------------- Menú Compra -------------")
-        print("1. Agregar Auto")
-        print("2. Terminar Compra y Facturar")
-        opcion = input("Seleccione una opción: ")
-
-        if opcion == "1":
-            placa = input("Ingrese la placa del auto: ")
-            auto = next((a for a in autos if a.placa == placa), None)
-            if auto:
-                agregar_seguro = input("¿Desea agregar seguro al auto? (SI/NO): ").strip().upper() == "SI"
-                compra.agregar_auto(auto, agregar_seguro)
-                print("Auto agregado a la compra.")
-            else:
-                print("Auto no encontrado.")
-        elif opcion == "2":
-            total = compra.generar_factura()
-            compras.append(compra)
-            print(f"Compra finalizada. Total: Q{total:.2f}")
-            break
-
-def reporte_compras():
-    print("------------- REPORTE DE COMPRAS -------------")
-    total_general = 0.0
-    for compra in compras:
-        print("==============================================")
-        print(f"CLIENTE:\nNombre: {compra.cliente.nombre}\nCorreo electrónico: {compra.cliente.correo}\nNit: {compra.cliente.nit}")
-        print("AUTO(S) ADQUIRIDO(S)")
-        for auto, agregar_seguro in compra.lista_productos:
-            seguro_texto = "Sí" if agregar_seguro else "No"
-            print(f"{auto.placa}, {auto.marca}, {auto.modelo}, Q{auto.precio_unitario:.2f}, {auto.descripcion}, Seguro: {seguro_texto}")
-        print(f"TOTAL: Q{compra.costo_total:.2f}")
-        total_general += compra.costo_total
-    print("==============================================")
-    print(f"Total General: Q{total_general:.2f}")
-    print("---------------------------------------------")
-
-def datos_estudiante():
-    print("Nombre: Javier Andrés Velásquez Bonilla")
-    print("Carnet: 202307775")
-
-def menu_principal():
-    while True:
-        print("------------- Menú Principal -------------")
-        print("1. Registrar Auto")
-        print("2. Registrar Cliente")
-        print("3. Realizar Compra")
-        print("4. Reporte de Compras")
-        print("5. Datos del Estudiante")
-        print("6. Salir")
-        print("------------------------------------------")
-        opcion = input("Seleccione una opción: ")
-
-        if opcion == "1":
-            registrar_auto()
-        elif opcion == "2":
-            registrar_cliente()
-        elif opcion == "3":
-            realizar_compra()
-        elif opcion == "4":
-            reporte_compras()
-        elif opcion == "5":
-            datos_estudiante()
-        elif opcion == "6":
-            print("Saliendo del programa.")
-            break
+@app.route('/login', methods=['GET', 'POST'])
+def login():
+    if request.method == 'POST':
+        username = request.form['username']
+        password = request.form['password']
+        user = Usuario.query.filter_by(username=username).first()
+        if user and check_password_hash(user.password, password):
+            login_user(user)
+            return redirect(url_for('dashboard'))
         else:
-            print("Opción no válida. Intente de nuevo.")
+            flash('Usuario o contraseña incorrectos', 'error')
+    return render_template('login.html')
 
-if __name__ == "__main__":
-    menu_principal()
+@app.route('/logout')
+@login_required
+def logout():
+    logout_user()
+    return redirect(url_for('login'))
+
+@app.route('/dashboard')
+@login_required
+def dashboard():
+    return render_template('dashboard.html')
+
+@app.route('/registrar_auto', methods=['GET', 'POST'])
+@login_required
+def registrar_auto():
+    if request.method == 'POST':
+        idTipoAuto = request.form['idTipoAuto']
+        if Auto.query.filter_by(idTipoAuto=idTipoAuto).first():
+            flash('El idTipoAuto ya existe', 'error')
+        else:
+            imagen_url = request.form['imagen']
+            
+            if is_url(imagen_url):
+                # Si es una URL, la usamos directamente
+                imagen_path = imagen_url
+            else:
+                # Si no es una URL, asumimos que es un archivo subido
+                imagen = request.files['imagen']
+                if imagen and allowed_file(imagen.filename):
+                    filename = secure_filename(imagen.filename)
+                    imagen_path = os.path.join(app.config['UPLOAD_FOLDER'], filename)
+                    imagen.save(imagen_path)
+                    imagen_path = url_for('uploaded_file', filename=filename)
+                else:
+                    imagen_path = url_for('static', filename='default-car.png')
+            
+            nuevo_auto = Auto(
+                idTipoAuto=idTipoAuto,
+                marca=request.form['marca'],
+                modelo=request.form['modelo'],
+                descripcion=request.form['descripcion'],
+                precioUnitario=float(request.form['precioUnitario']),
+                cantidad=int(request.form['cantidad']),
+                imagen=imagen_path,
+                placa=request.form['placa']  # Asignando el valor de placa
+            )
+            db.session.add(nuevo_auto)
+            db.session.commit()
+            flash('Auto registrado con éxito', 'success')
+            return redirect(url_for('listar_autos'))
+    return render_template('registrar_auto.html')
+
+@app.route('/listar_autos')
+@login_required
+def listar_autos():
+    autos = Auto.query.all()
+    return render_template('listar_autos.html', autos=autos)
+
+@app.route('/eliminar_auto/<int:id>', methods=['POST'])
+@login_required
+def eliminar_auto(id):
+    auto = Auto.query.get_or_404(id)
+    db.session.delete(auto)
+    db.session.commit()
+    flash('Auto eliminado con éxito', 'success')
+    return redirect(url_for('listar_autos'))
+
+@app.route('/uploads/<filename>')
+def uploaded_file(filename):
+    return send_from_directory(app.config['UPLOAD_FOLDER'], filename)
+
+if __name__ == '__main__':
+    with app.app_context():
+        db.create_all()
+        if not Usuario.query.filter_by(username='empleado').first():
+            nuevo_usuario = Usuario(username='empleado', password=generate_password_hash('$uper4utos#'))
+            db.session.add(nuevo_usuario)
+            db.session.commit()
+    app.run(debug=True)
+
+
+
+
+
+
+
+
+
+

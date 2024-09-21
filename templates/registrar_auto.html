@@ -1,0 +1,48 @@
+{% extends "menu_autos.html" %}
+{% block title %}Registrar Auto{% endblock %}
+{% block content %}
+<div class="container mt-5">
+    <h1 class="text-center mb-4">Registrar Nuevo Auto</h1>
+    <form method="POST" enctype="multipart/form-data">
+        <div class="form-group">
+            <label for="idTipoAuto">ID Tipo Auto:</label>
+            <input type="number" class="form-control" id="idTipoAuto" name="idTipoAuto" required>
+        </div>
+        <div class="form-group">
+            <label for="marca">Marca:</label>
+            <input type="text" class="form-control" id="marca" name="marca" required>
+        </div>
+        <div class="form-group">
+            <label for="modelo">Modelo:</label>
+            <input type="text" class="form-control" id="modelo" name="modelo" required>
+        </div>
+        <div class="form-group">
+            <label for="descripcion">Descripción:</label>
+            <textarea class="form-control" id="descripcion" name="descripcion" required></textarea>
+        </div>
+        <div class="form-group">
+            <label for="precioUnitario">Precio Unitario:</label>
+            <input type="number" class="form-control" id="precioUnitario" name="precioUnitario" step="0.01" required>
+        </div>
+        <div class="form-group">
+            <label for="cantidad">Cantidad:</label>
+            <input type="number" class="form-control" id="cantidad" name="cantidad" required>
+        </div>
+        <div class="form-group">
+            <label for="placa">Placa:</label>
+            <input type="text" class="form-control" id="placa" name="placa" required>
+        </div>
+        <div class="form-group">
+            <label for="imagen">Imagen:</label>
+            <input type="file" class="form-control-file" id="imagen" name="imagen" accept=".png,.jpg,.jpeg,.gif,.webp">
+            <p class="text-center mt-2">O</p>
+            <label for="imagen_url">URL de la imagen:</label>
+            <input type="url" class="form-control" id="imagen_url" name="imagen">
+        </div>
+        <button type="submit" class="btn btn-primary btn-block">Registrar Auto</button>
+    </form>
+</div>
+{% endblock %}
+
+
+

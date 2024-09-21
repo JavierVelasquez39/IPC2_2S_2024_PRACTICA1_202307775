@@ -1,0 +1,98 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Super Autos GT</title>
+    <!-- Bootstrap CSS -->
+    <link href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css" rel="stylesheet">
+    <style>
+        body {
+            background-color: #e3f2fd; /* Color celeste claro */
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; /* Fuente más bonita */
+        }
+        .container {
+            margin-top: 50px;
+            text-align: center; /* Centrar el contenido */
+        }
+        nav {
+            background-color: #2196F3; /* Color celeste */
+        }
+        .navbar-nav {
+            display: flex; /* Usar flexbox para alinear los elementos */
+            justify-content: flex-start; /* Alinear a la izquierda */
+        }
+        .nav-item {
+            margin: 0 15px; /* Espaciado entre botones */
+        }
+        .nav-link {
+            color: white; /* Color de texto */
+            font-weight: bold; /* Texto en negrita */
+            transition: background-color 0.3s; /* Transición suave al pasar el mouse */
+            padding: 10px 15px; /* Espaciado interno para mayor clicabilidad */
+            border-radius: 5px; /* Bordes redondeados */
+        }
+        .nav-link:hover {
+            background-color: #1976D2; /* Color de fondo al pasar el mouse */
+        }
+        .flash-messages {
+            margin-bottom: 20px;
+        }
+        .flash-message {
+            padding: 10px;
+            margin-bottom: 10px;
+            border-radius: 5px;
+        }
+        .flash-message.success {
+            background-color: #d4edda;
+            border-color: #c3e6cb;
+            color: #155724;
+        }
+        .flash-message.error {
+            background-color: #f8d7da;
+            border-color: #f5c6cb;
+            color: #721c24;
+        }
+    </style>
+</head>
+<body>
+    {% if show_nav is not defined or show_nav %}
+        <nav class="navbar navbar-expand-lg">
+            <div class="container">
+                <div class="navbar-nav">
+                    <a class="nav-item nav-link" href="{{ url_for('dashboard') }}">Inicio</a>
+                    <a class="nav-item nav-link" href="{{ url_for('registrar_auto') }}">Registrar Auto</a>
+                    <a class="nav-item nav-link" href="{{ url_for('listar_autos') }}">Visualizar Autos</a>
+                    <a class="nav-item nav-link" href="{{ url_for('logout') }}">Cerrar Sesión</a>
+                </div>
+            </div>
+        </nav>
+    {% endif %}
+    
+    <div class="container">
+        {% with messages = get_flashed_messages(with_categories=true) %} 
+            {% if messages %}
+                <div class="flash-messages">
+                    {% for category, message in messages %}
+                        <div class="flash-message {{ category }}">{{ message }}</div>
+                    {% endfor %}
+                </div>
+            {% endif %}
+        {% endwith %}
+        {% block content %}{% endblock %}
+    </div>
+
+    <!-- Bootstrap JS and dependencies -->
+    <script src="https://code.jquery.com/jquery-3.5.1.slim.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.9.2/dist/umd/popper.min.js"></script>
+    <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
+</body>
+</html>
+
+
+
+
+
+
+
+

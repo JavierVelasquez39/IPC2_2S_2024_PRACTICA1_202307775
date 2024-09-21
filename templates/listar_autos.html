@@ -1,0 +1,31 @@
+{% extends "menu_autos.html" %}
+{% block title %}Autos Registrados{% endblock %}
+{% block content %}
+<h1>AUTOS REGISTRADOS</h1>
+<div class="autos-container">
+    {% for auto in autos %}
+    <div class="auto-card">
+        <div class="auto-image">
+            <img src="{{ auto.imagen }}" alt="{{ auto.marca }} {{ auto.modelo }}" onerror="this.src='/static/default-car.png';">
+        </div>
+        <div class="auto-info">
+            <p><strong>idTipo:</strong> {{ auto.idTipoAuto }}</p>
+            <p><strong>Marca:</strong> {{ auto.marca }}</p>
+            <p><strong>Modelo:</strong> {{ auto.modelo }}</p>
+            <p><strong>Precio:</strong> Q{{ auto.precioUnitario }}</p>
+            <p><strong>Descripción:</strong> {{ auto.descripcion }}</p>
+        </div>
+        <div class="auto-cantidad">
+            <span>{{ auto.cantidad }}</span>
+        </div>
+        <div class="auto-actions">
+            <form method="POST" action="{{ url_for('eliminar_auto', id=auto.id) }}">
+                <button type="submit" class="eliminar-btn" onclick="return confirm('¿Está seguro de que desea eliminar este auto?')">Eliminar</button>
+            </form>
+        </div>
+    </div>
+    {% endfor %}
+</div>
+{% endblock %}
+
+
